@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model StudentStatistics {
+  id            Int      @id @default(autoincrement())
+  year          Int
+  sido          String   @db.VarChar(20)
+  sigungu       String?  @db.VarChar(50)
+  schoolLevel   String   @map("school_level") @db.VarChar(20)
+  totalStudents Int      @default(0) @map("total_students")
+  maleStudents  Int      @default(0) @map("male_students")
+  femaleStudents Int     @default(0) @map("female_students")
+  totalClasses  Int      @default(0) @map("total_classes")
+  schoolCount   Int      @default(0) @map("school_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([year, sido])
+  @@index([schoolLevel])
+  @@index([sigungu])
+  @@map("student_statistics")
+}
+
+model StudentDataRaw {
+  id             Int      @id @default(autoincrement())
+  year           Int
+  sido           String?  @db.VarChar(20)
+  sigungu        String?  @db.VarChar(50)
+  eduOffice      String?  @map("edu_office") @db.VarChar(50)
+  schoolName     String?  @map("school_name") @db.VarChar(100)
+  schoolLevel    String?  @map("school_level") @db.VarChar(20)
+  highSchoolType String?  @map("high_school_type") @db.VarChar(20)
+  establishment  String?  @db.VarChar(10)
+  regionSize     String?  @map("region_size") @db.VarChar(20)
+  grade          Int?
+  className      String?  @map("class_name") @db.VarChar(10)
+  classCount     Int      @default(0) @map("class_count")
+  studentsTotal  Int      @default(0) @map("students_total")
+  studentsMale   Int      @default(0) @map("students_male")
+  studentsFemale Int      @default(0) @map("students_female")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([year])
+  @@index([sido])
+  @@index([schoolLevel])
+  @@map("student_data_raw")
+}
