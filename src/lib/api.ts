@@ -1,4 +1,6 @@
-const API_BASE = '/api'
+// 프로덕션: https://chejump.com/stats-api
+// 로컬: 빈 문자열 (Next.js API routes 사용)
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 export interface RegionsData {
   sidos: string[]
@@ -48,13 +50,17 @@ export interface MapData {
 export async function fetchRegions(): Promise<RegionsData> {
   const res = await fetch(`${API_BASE}/regions`)
   const data = await res.json()
-  return data.data
+  return {
+    sidos: data.sidos || [],
+    years: [2025, 2024, 2023, 2022, 2021, 2020],
+    schoolLevels: ['초등학교', '중학교', '고등학교']
+  }
 }
 
 export async function fetchSigungus(sido: string): Promise<string[]> {
-  const res = await fetch(`${API_BASE}/regions?sido=${encodeURIComponent(sido)}`)
+  const res = await fetch(`${API_BASE}/regions`)
   const data = await res.json()
-  return data.data
+  return data.sigungus?.[sido] || []
 }
 
 export async function fetchSummary(year: number, schoolLevel?: string): Promise<SummaryData> {
@@ -76,8 +82,7 @@ export async function fetchTrend(
   if (schoolLevel) params.set('schoolLevel', schoolLevel)
 
   const res = await fetch(`${API_BASE}/statistics/trend?${params}`)
-  const data = await res.json()
-  return data.data
+  return await res.json()
 }
 
 export async function fetchMapData(
