@@ -259,7 +259,27 @@ export default function Map3D() {
         layers={layers}
       >
         <Map
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+          mapStyle={{
+            version: 8,
+            sources: {
+              'vworld-base': {
+                type: 'raster',
+                tiles: [
+                  'https://api.vworld.kr/req/wmts/1.0.0/CEB52025-E065-364C-9DBA-44880E3B02B1/Base/{z}/{y}/{x}.png'
+                ],
+                tileSize: 256
+              }
+            },
+            layers: [
+              {
+                id: 'vworld-base-layer',
+                type: 'raster',
+                source: 'vworld-base',
+                minzoom: 0,
+                maxzoom: 19
+              }
+            ]
+          }}
           attributionControl={false}
         />
       </DeckGL>

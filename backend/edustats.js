@@ -201,7 +201,7 @@ app.get('/statistics/trend', async (req, res) => {
         SUM(total_students) as totalStudents,
         SUM(male_students) as maleStudents,
         SUM(female_students) as femaleStudents,
-        COUNT(DISTINCT school_name) as schoolCount
+        SUM(school_count) as schoolCount
       FROM student_statistics
       WHERE 1=1
     `;
@@ -242,7 +242,7 @@ app.get('/statistics/map', async (req, res) => {
         SUM(total_students) as totalStudents,
         SUM(male_students) as maleStudents,
         SUM(female_students) as femaleStudents,
-        COUNT(DISTINCT school_name) as schoolCount
+        SUM(school_count) as schoolCount
       FROM student_statistics
       WHERE year = ?
     `;
