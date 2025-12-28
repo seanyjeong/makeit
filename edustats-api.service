@@ -1,0 +1,16 @@
+[Unit]
+Description=EduStats Korea API Server
+After=network.target mysql.service
+
+[Service]
+Type=simple
+User=sean
+WorkingDirectory=/home/sean/makeit/edustats/backend
+ExecStart=/home/sean/.nvm/versions/node/v25.2.1/bin/node edustats.js
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=3003
+
+[Install]
+WantedBy=multi-user.target

@@ -29,10 +29,14 @@ export const useFilterStore = create<FilterState>((set) => ({
 // 선택된 지역 정보
 interface SelectedRegionState {
   selectedSido: string | null
+  selectedSigungu: string | null
   setSelectedSido: (sido: string | null) => void
+  setSelectedSigungu: (sigungu: string | null) => void
 }
 
 export const useSelectedRegionStore = create<SelectedRegionState>((set) => ({
   selectedSido: null,
-  setSelectedSido: (sido) => set({ selectedSido: sido })
+  selectedSigungu: null,
+  setSelectedSido: (sido) => set({ selectedSido: sido, selectedSigungu: null }),
+  setSelectedSigungu: (sigungu) => set({ selectedSigungu: sigungu })
 }))

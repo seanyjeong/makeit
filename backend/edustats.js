@@ -272,6 +272,119 @@ app.get('/statistics/map', async (req, res) => {
   }
 });
 
+// GET /schools - 학교 목록 (필터 적용)
+app.get('/schools', async (req, res) => {
+  try {
+    const { year = 2025, sido, sigungu, schoolLevel, page = 1, limit = 50 } = req.query;
+
+    let query = `
+      SELECT DISTINCT
+        school_name as schoolName,
+        sido,
+        sigungu,
+        school_level as schoolLevel,
+        SUM(students_total) as totalStudents,
+        SUM(students_male) as maleStudents,
+        SUM(students_female) as femaleStudents,
+        SUM(class_count) as totalClasses
+      FROM student_data_raw
+      WHERE year = ?
+    `;
+    const params = [parseInt(year)];
+
+    if (sido) {
+      query += ' AND sido = ?';
+      params.push(sido);
+    }
+    if (sigungu) {
+      query += ' AND sigungu = ?';
+      params.push(sigungu);
+    }
+    if (schoolLevel) {
+      query += ' AND school_level = ?';
+      params.push(schoolLevel);
+    }
+
+    query += ' GROUP BY school_name, sido, sigungu, school_level ORDER BY totalStudents DESC';
+
+    // Count total
+    const countQuery = `SELECT COUNT(DISTINCT school_name) as total FROM student_data_raw WHERE year = ?` +
+      (sido ? ' AND sido = ?' : '') +
+      (sigungu ? ' AND sigungu = ?' : '') +
+      (schoolLevel ? ' AND school_level = ?' : '');
+    const countParams = [parseInt(year)];
+    if (sido) countParams.push(sido);
+    if (sigungu) countParams.push(sigungu);
+    if (schoolLevel) countParams.push(schoolLevel);
+
+    const [countResult] = await pool.query(countQuery, countParams);
+    const total = countResult[0].total;
+
+    // Add pagination
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    query += ' LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), offset);
+
+    const [rows] = await pool.query(query, params);
+
+    res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    res.status(500).json({ error: 'Failed to fetch schools' });
+  }
+});
+
+// GET /schools/:name/detail - 학교 상세 (학년별 데이터)
+app.get('/schools/:name/detail', async (req, res) => {
+  try {
+    const { name } = req.params;
+    const { year = 2025 } = req.query;
+
+    const [rows] = await pool.query(`
+      SELECT
+        grade as \`grade\`,
+        SUM(class_count) as classCount,
+        SUM(students_total) as totalStudents,
+        SUM(students_male) as maleStudents,
+        SUM(students_female) as femaleStudents
+      FROM student_data_raw
+      WHERE school_name = ? AND year = ?
+      GROUP BY grade
+      ORDER BY grade
+    `, [decodeURIComponent(name), parseInt(year)]);
+
+    // 학교 기본 정보
+    const [info] = await pool.query(`
+      SELECT DISTINCT
+        school_name as schoolName,
+        sido,
+        sigungu,
+        school_level as schoolLevel
+      FROM student_data_raw
+      WHERE school_name = ? AND year = ?
+      LIMIT 1
+    `, [decodeURIComponent(name), parseInt(year)]);
+
+    res.json({
+      success: true,
+      school: info[0] || null,
+      grades: rows
+    });
+  } catch (error) {
+    console.error('Error fetching school detail:', error);
+    res.status(500).json({ error: 'Failed to fetch school detail' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🎓 EduStats Backend running on port ${PORT}`);

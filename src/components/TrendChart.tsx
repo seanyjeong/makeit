@@ -17,17 +17,17 @@ import {
 
 export default function TrendChart() {
   const { schoolLevel } = useFilterStore()
-  const { selectedSido } = useSelectedRegionStore()
+  const { selectedSido, selectedSigungu } = useSelectedRegionStore()
   const [data, setData] = useState<TrendData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    fetchTrend(selectedSido || undefined, undefined, schoolLevel || undefined).then(d => {
+    fetchTrend(selectedSido || undefined, selectedSigungu || undefined, schoolLevel || undefined).then(d => {
       setData(d)
       setLoading(false)
     })
-  }, [selectedSido, schoolLevel])
+  }, [selectedSido, selectedSigungu, schoolLevel])
 
   // 변화율 계산
   const getChangeRate = (): string => {
@@ -57,9 +57,13 @@ export default function TrendChart() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-white font-semibold">
-              {selectedSido ? `${selectedSido} 학생수 추이` : '전국 학생수 추이'}
+              {selectedSigungu
+                ? `${selectedSido} ${selectedSigungu} 학생수 추이`
+                : selectedSido
+                  ? `${selectedSido} 학생수 추이`
+                  : '전국 학생수 추이'}
             </h2>
-            <p className="text-xs text-gray-400">2020-2025년</p>
+            <p className="text-xs text-gray-400">2020-2025년 {schoolLevel || '전체'}</p>
           </div>
           <div className={`px-2 py-1 rounded-full text-xs font-medium ${
             isDecreasing ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'

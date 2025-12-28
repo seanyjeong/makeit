@@ -1,11 +1,12 @@
 'use client'
 
-import { useFilterStore } from '@/lib/store'
+import { useFilterStore, useSelectedRegionStore } from '@/lib/store'
 import { useEffect, useState } from 'react'
 import { fetchRegions, fetchSigungus } from '@/lib/api'
 
 export default function FilterPanel() {
   const { year, sido, sigungu, schoolLevel, setYear, setSido, setSigungu, setSchoolLevel, resetFilters } = useFilterStore()
+  const { selectedSido, selectedSigungu, setSelectedSido, setSelectedSigungu } = useSelectedRegionStore()
 
   const [years, setYears] = useState<number[]>([])
   const [sidos, setSidos] = useState<string[]>([])
@@ -25,12 +26,26 @@ export default function FilterPanel() {
 
   // 시도 변경 시 시군구 로드
   useEffect(() => {
-    if (sido) {
-      fetchSigungus(sido).then(setSigungus)
+    if (selectedSido) {
+      fetchSigungus(selectedSido).then(setSigungus)
     } else {
       setSigungus([])
     }
-  }, [sido])
+  }, [selectedSido])
+
+  // 지도에서 선택한 시도를 필터 패널과 동기화
+  useEffect(() => {
+    if (selectedSido !== sido) {
+      setSido(selectedSido)
+    }
+  }, [selectedSido, sido, setSido])
+
+  // 시군구 동기화
+  useEffect(() => {
+    if (selectedSigungu !== sigungu) {
+      setSigungu(selectedSigungu)
+    }
+  }, [selectedSigungu, sigungu, setSigungu])
 
   if (loading) {
     return (
@@ -50,7 +65,11 @@ export default function FilterPanel() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-white font-semibold">필터</h3>
         <button
-          onClick={resetFilters}
+          onClick={() => {
+            resetFilters()
+            setSelectedSido(null)
+            setSelectedSigungu(null)
+          }}
           className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
         >
           초기화
@@ -106,8 +125,12 @@ export default function FilterPanel() {
         <div>
           <label className="block text-sm text-gray-400 mb-1.5">시도</label>
           <select
-            value={sido || ''}
-            onChange={(e) => setSido(e.target.value || null)}
+            value={selectedSido || ''}
+            onChange={(e) => {
+              const value = e.target.value || null
+              setSelectedSido(value)
+              setSido(value)
+            }}
             className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="" className="bg-gray-800">전국</option>
@@ -118,12 +141,16 @@ export default function FilterPanel() {
         </div>
 
         {/* 시군구 선택 (시도 선택 시에만 표시) */}
-        {sido && sigungus.length > 0 && (
+        {selectedSido && sigungus.length > 0 && (
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">시군구</label>
             <select
-              value={sigungu || ''}
-              onChange={(e) => setSigungu(e.target.value || null)}
+              value={selectedSigungu || ''}
+              onChange={(e) => {
+                const value = e.target.value || null
+                setSelectedSigungu(value)
+                setSigungu(value)
+              }}
               className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="" className="bg-gray-800">전체</option>
