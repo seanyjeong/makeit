@@ -91,6 +91,7 @@ export default function Map2D() {
     sido: string
     data: MapData | null
   } | null>(null)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(true)
 
   // GeoJSON 로드
@@ -179,8 +180,12 @@ export default function Map2D() {
     }
   }, [selectedSido, setSelectedSido, setSelectedSigungu])
 
-  // 호버 핸들러
+  // 호버 핸들러 (디바운스 적용)
   const onMouseMove = useCallback((e: MapLayerMouseEvent) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+
     if (e.features && e.features.length > 0) {
       const feature = e.features[0]
       const dbName = feature.properties?.dbName
@@ -193,12 +198,19 @@ export default function Map2D() {
         })
       }
     } else {
-      setHoverInfo(null)
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoverInfo(null)
+      }, 100)
     }
   }, [statsMap])
 
   const onMouseLeave = useCallback(() => {
-    setHoverInfo(null)
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHoverInfo(null)
+    }, 100)
   }, [])
 
   // 전국보기 버튼
