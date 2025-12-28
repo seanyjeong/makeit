@@ -43,7 +43,7 @@ export default function TrendChart() {
 
   if (loading) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4 h-[400px]">
         <div className="h-6 bg-white/10 rounded w-32 mb-4 animate-pulse"></div>
         <div className="h-[300px] bg-white/10 rounded animate-pulse"></div>
       </div>
@@ -51,7 +51,7 @@ export default function TrendChart() {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+    <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden h-[400px] flex flex-col">
       {/* 헤더 */}
       <div className="px-4 py-3 border-b border-white/10">
         <div className="flex items-center justify-between">
@@ -74,8 +74,8 @@ export default function TrendChart() {
       </div>
 
       {/* 차트 */}
-      <div className="p-4">
-        <div className="h-[280px]">
+      <div className="flex-1 p-4">
+        <div className="h-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
@@ -125,24 +125,6 @@ export default function TrendChart() {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 요약 정보 */}
-        {data.length > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400">최근 ({data[data.length - 1]?.year})</p>
-              <p className="text-lg font-bold text-white">
-                {(data[data.length - 1]?.totalStudents / 10000).toFixed(1)}만명
-              </p>
-            </div>
-            <div className="bg-white/5 rounded-lg p-3">
-              <p className="text-xs text-gray-400">5년간 변화</p>
-              <p className={`text-lg font-bold ${isDecreasing ? 'text-red-400' : 'text-green-400'}`}>
-                {isDecreasing ? '' : '+'}{changeRate}%
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
