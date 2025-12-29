@@ -131,7 +131,24 @@ app.get('/statistics', async (req, res) => {
 // GET /statistics/summary - 요약 통계
 app.get('/statistics/summary', async (req, res) => {
   try {
-    const { year = 2025 } = req.query;
+    const { year = 2025, sido, sigungu, schoolLevel } = req.query;
+
+    // WHERE 조건 구성
+    let whereClause = 'WHERE year = ?';
+    const params = [parseInt(year)];
+
+    if (sido) {
+      whereClause += ' AND sido = ?';
+      params.push(sido);
+    }
+    if (sigungu) {
+      whereClause += ' AND sigungu = ?';
+      params.push(sigungu);
+    }
+    if (schoolLevel) {
+      whereClause += ' AND school_level = ?';
+      params.push(schoolLevel);
+    }
 
     // 전체 통계
     const [totalResult] = await pool.query(`
@@ -142,8 +159,8 @@ app.get('/statistics/summary', async (req, res) => {
         SUM(total_classes) as classes,
         SUM(school_count) as schools
       FROM student_statistics
-      WHERE year = ?
-    `, [parseInt(year)]);
+      ${whereClause}
+    `, params);
 
     // 학제별 통계
     const [bySchoolLevel] = await pool.query(`
@@ -152,22 +169,26 @@ app.get('/statistics/summary', async (req, res) => {
         SUM(total_students) as students,
         SUM(school_count) as schools
       FROM student_statistics
-      WHERE year = ?
+      ${whereClause}
       GROUP BY school_level
       ORDER BY students DESC
-    `, [parseInt(year)]);
+    `, params);
 
-    // 시도별 통계
-    const [bySido] = await pool.query(`
-      SELECT
-        sido,
-        SUM(total_students) as students,
-        SUM(school_count) as schools
-      FROM student_statistics
-      WHERE year = ?
-      GROUP BY sido
-      ORDER BY students DESC
-    `, [parseInt(year)]);
+    // 시도별 통계 (시도 필터가 없을 때만)
+    let bySido = [];
+    if (!sido) {
+      const [sidoResult] = await pool.query(`
+        SELECT
+          sido,
+          SUM(total_students) as students,
+          SUM(school_count) as schools
+        FROM student_statistics
+        ${whereClause}
+        GROUP BY sido
+        ORDER BY students DESC
+      `, params);
+      bySido = sidoResult;
+    }
 
     // 연도 목록
     const [years] = await pool.query(
@@ -177,6 +198,8 @@ app.get('/statistics/summary', async (req, res) => {
     res.json({
       success: true,
       year: parseInt(year),
+      sido: sido || null,
+      sigungu: sigungu || null,
       data: {
         total: totalResult[0],
         bySchoolLevel,
@@ -382,6 +405,54 @@ app.get('/schools/:name/detail', async (req, res) => {
   } catch (error) {
     console.error('Error fetching school detail:', error);
     res.status(500).json({ error: 'Failed to fetch school detail' });
+  }
+});
+
+// GET /statistics/compare - 지역 그룹별 비교 데이터
+app.get('/statistics/compare', async (req, res) => {
+  try {
+    const { groups, schoolLevel } = req.query;
+
+    if (!groups) {
+      return res.status(400).json({ error: 'Groups parameter required' });
+    }
+
+    // groups는 JSON 문자열로 받음: [["서울","경기"],["부산","대전","대구"]]
+    const parsedGroups = JSON.parse(groups);
+
+    const results = await Promise.all(parsedGroups.map(async (regionList, index) => {
+      if (!Array.isArray(regionList) || regionList.length === 0) {
+        return { groupIndex: index, data: [] };
+      }
+
+      const placeholders = regionList.map(() => '?').join(',');
+      let query = `
+        SELECT
+          year,
+          SUM(total_students) as totalStudents,
+          SUM(male_students) as maleStudents,
+          SUM(female_students) as femaleStudents,
+          SUM(school_count) as schoolCount
+        FROM student_statistics
+        WHERE sido IN (${placeholders})
+      `;
+      const params = [...regionList];
+
+      if (schoolLevel) {
+        query += ' AND school_level = ?';
+        params.push(schoolLevel);
+      }
+
+      query += ' GROUP BY year ORDER BY year ASC';
+
+      const [rows] = await pool.query(query, params);
+      return { groupIndex: index, regions: regionList, data: rows };
+    }));
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching compare data:', error);
+    res.status(500).json({ error: 'Failed to fetch compare data' });
   }
 });
 

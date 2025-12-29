@@ -19,11 +19,16 @@ export default function SummaryCards() {
 
   useEffect(() => {
     setLoading(true)
-    fetchSummary(year, schoolLevel || undefined).then(d => {
+    fetchSummary(
+      year,
+      selectedSido || undefined,
+      selectedSigungu || undefined,
+      schoolLevel || undefined
+    ).then(d => {
       setData(d)
       setLoading(false)
     })
-  }, [year, schoolLevel])
+  }, [year, selectedSido, selectedSigungu, schoolLevel])
 
   if (loading || !data) {
     return (

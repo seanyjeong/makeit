@@ -63,10 +63,19 @@ export async function fetchSigungus(sido: string): Promise<string[]> {
   return data.sigungus?.[sido] || []
 }
 
-export async function fetchSummary(year: number, schoolLevel?: string): Promise<SummaryData> {
-  let url = `${API_BASE}/statistics/summary?year=${year}`
-  if (schoolLevel) url += `&schoolLevel=${encodeURIComponent(schoolLevel)}`
-  const res = await fetch(url)
+export async function fetchSummary(
+  year: number,
+  sido?: string,
+  sigungu?: string,
+  schoolLevel?: string
+): Promise<SummaryData> {
+  const params = new URLSearchParams()
+  params.set('year', year.toString())
+  if (sido) params.set('sido', sido)
+  if (sigungu) params.set('sigungu', sigungu)
+  if (schoolLevel) params.set('schoolLevel', schoolLevel)
+
+  const res = await fetch(`${API_BASE}/statistics/summary?${params}`)
   const data = await res.json()
   return data.data
 }
@@ -94,4 +103,22 @@ export async function fetchMapData(
   const res = await fetch(url)
   const json = await res.json()
   return { meta: json.meta, data: json.data }
+}
+
+export interface CompareGroupData {
+  groupIndex: number
+  regions: string[]
+  data: TrendData[]
+}
+
+export async function fetchCompareData(
+  groups: string[][],
+  schoolLevel?: string
+): Promise<CompareGroupData[]> {
+  const params = new URLSearchParams()
+  params.set('groups', JSON.stringify(groups))
+  if (schoolLevel) params.set('schoolLevel', schoolLevel)
+
+  const res = await fetch(`${API_BASE}/statistics/compare?${params}`)
+  return await res.json()
 }

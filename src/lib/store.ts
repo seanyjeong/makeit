@@ -40,3 +40,54 @@ export const useSelectedRegionStore = create<SelectedRegionState>((set) => ({
   setSelectedSido: (sido) => set({ selectedSido: sido, selectedSigungu: null }),
   setSelectedSigungu: (sigungu) => set({ selectedSigungu: sigungu })
 }))
+
+// 지역 비교 그룹
+export interface RegionGroup {
+  id: string
+  name: string
+  color: string
+  regions: string[] // sido names
+}
+
+interface RegionCompareState {
+  groups: RegionGroup[]
+  addGroup: (name: string, color: string) => void
+  removeGroup: (id: string) => void
+  addRegionToGroup: (groupId: string, sido: string) => void
+  removeRegionFromGroup: (groupId: string, sido: string) => void
+  clearGroups: () => void
+}
+
+const GROUP_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6']
+
+export const useRegionCompareStore = create<RegionCompareState>((set) => ({
+  groups: [],
+  addGroup: (name, color) => set((state) => ({
+    groups: [...state.groups, {
+      id: Date.now().toString(),
+      name,
+      color,
+      regions: []
+    }]
+  })),
+  removeGroup: (id) => set((state) => ({
+    groups: state.groups.filter(g => g.id !== id)
+  })),
+  addRegionToGroup: (groupId, sido) => set((state) => ({
+    groups: state.groups.map(g =>
+      g.id === groupId && !g.regions.includes(sido)
+        ? { ...g, regions: [...g.regions, sido] }
+        : g
+    )
+  })),
+  removeRegionFromGroup: (groupId, sido) => set((state) => ({
+    groups: state.groups.map(g =>
+      g.id === groupId
+        ? { ...g, regions: g.regions.filter(r => r !== sido) }
+        : g
+    )
+  })),
+  clearGroups: () => set({ groups: [] })
+}))
+
+export { GROUP_COLORS }

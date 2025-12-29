@@ -3,6 +3,7 @@ import FilterPanel from '@/components/FilterPanel'
 import SummaryCards from '@/components/SummaryCards'
 import TrendChart from '@/components/TrendChart'
 import GenderTrendChart from '@/components/GenderTrendChart'
+import RegionCompare from '@/components/RegionCompare'
 import SchoolRanking from '@/components/SchoolRanking'
 import SchoolTable from '@/components/SchoolTable'
 
@@ -12,18 +13,15 @@ export default function Home() {
       <Header />
 
       <main className="max-w-[1600px] mx-auto px-4 py-6">
-        {/* 상단: 필터 + 요약 카드 */}
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 mb-6">
-          {/* 왼쪽: 필터 패널 */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <FilterPanel />
-          </aside>
+        {/* 필터 패널 (상단 고정) */}
+        <section className="mb-6">
+          <FilterPanel />
+        </section>
 
-          {/* 오른쪽: 요약 카드 */}
-          <section>
-            <SummaryCards />
-          </section>
-        </div>
+        {/* 요약 카드 */}
+        <section className="mb-6">
+          <SummaryCards />
+        </section>
 
         {/* 차트 영역 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -37,6 +35,11 @@ export default function Home() {
             <GenderTrendChart />
           </section>
         </div>
+
+        {/* 지역 비교 */}
+        <section className="mb-6">
+          <RegionCompare />
+        </section>
 
         {/* 학교 랭킹 + 테이블 */}
         <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-6">
